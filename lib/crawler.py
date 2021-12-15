@@ -8,6 +8,7 @@ class Crawler():
 	def __init__(self, seed, data_path):
 		self.seed = seed
 		self.data_path = data_path
+		self.current_page_number =1
 
 	def make_filename(self,url):
 		""" Extracts domain from a url.
@@ -41,6 +42,9 @@ class Crawler():
 			print(f'Can not write to file: {filename}: {str(e)}')
 			exit(-1)
 
+	# def add_to_seed(self):
+	# 	query_param = 'page_1_1=i'
+
 	def get_html(self,url):
 		# GET request without SSL verification:
 		try:
@@ -64,14 +68,29 @@ class Crawler():
 		return html
 
 	def crawl_page(self, url):
+		print(f'Crawling page: {url}')
 		html = self.get_html(url)
+		base_url = self.seed[0]
 
 		# filename = self.make_filename(url)
 		# self.write_to_file(filename, html)
 		# return html
 
 		scraper = Scraper(html)
-		scraper.get_publications_container()
+		pubs_data = scraper.get_pubs_data()
+		print(len(pubs_data))
+
+
+		# if pubs_data is not empy => crawl next
+		if pubs_data:
+			# query_param = '?page_1_1=i'
+
+			# next_page_url = base_url + '?page_1_1=' + current_page_number
+			self.current_page_number+=1
+			next_page_url = f'{base_url}?page_1_1={self.current_page_number}'
+
+			self.crawl_page(next_page_url)
+
 
 	def run(self):
 		""" run the crawler for each url in seed
@@ -88,10 +107,10 @@ if __name__ == '__main__':
 		# 'https://www.imdb.com/chart/moviemeter/?ref_=nv_mv_mpm'
 		# 'https://www.autokelly.bg/',
 		# 'https://www.imdb.com/chart/moviemeter/?ref_=nv_mv_mpm',
-		# 'https://bnr.bg/hristobotev/radioteatre/list',
 		# 'https://bnr.bg/lyubopitno/list',
 		# 'https://www.jobs.bg/front_job_search.php?add_sh=1&from_hp=1&keywords%5B%5D=python',
-		# 'https://bnr.bg/lyubopitno/list'
+		# 'https://bnr.bg/lyubopitno/list',
+		'https://bnr.bg/hristobotev/radioteatre/list'
 	]
 	crawler = Crawler(seed, "../data/")
 	crawler.run()
