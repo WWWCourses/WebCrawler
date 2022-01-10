@@ -5,8 +5,10 @@ import threading
 from lib.scraper import Scraper
 
 class Crawler():
-	def __init__(self, seed, data_path):
-		self.seed = seed
+	def __init__(self, base_url, data_path):
+		self.base_url = base_url
+		self.seed = []
+		self.visited = []
 		self.data_path = data_path
 		self.current_page_number =1
 
@@ -42,8 +44,6 @@ class Crawler():
 			print(f'Can not write to file: {filename}: {str(e)}')
 			exit(-1)
 
-	# def add_to_seed(self):
-	# 	query_param = 'page_1_1=i'
 
 	def get_html(self,url):
 		# GET request without SSL verification:
@@ -67,50 +67,51 @@ class Crawler():
 
 		return html
 
-	def crawl_page(self, url):
-		print(f'Crawling page: {url}')
+	def get_pubs_urls(self, url):
+		print(f'Crawling main page {self.current_page_number}: {url}')
 		html = self.get_html(url)
-		base_url = self.seed[0]
 
 		# filename = self.make_filename(url)
 		# self.write_to_file(filename, html)
 		# return html
 
 		scraper = Scraper(html)
-		pubs_data = scraper.get_pubs_data()
-		print(len(pubs_data))
+		pubs_urls = scraper.get_pubs_urls()
 
+		# if pubs_urls is not empy => crawl next
+		if pubs_urls:
+			# prepend 'https://bnr.bg/' to pubs_urls:
+			pubs_urls = ['https://bnr.bg/'+url for url in pubs_urls]
 
-		# if pubs_data is not empy => crawl next
-		if pubs_data:
-			# query_param = '?page_1_1=i'
+			# concatenate pubs.urls to self.seed
+			self.seed = [*self.seed, *pubs_urls]
 
-			# next_page_url = base_url + '?page_1_1=' + current_page_number
+			# make next page url
 			self.current_page_number+=1
-			next_page_url = f'{base_url}?page_1_1={self.current_page_number}'
+			next_page_url = f'{self.base_url}?page_1_1={self.current_page_number}'
 
-			self.crawl_page(next_page_url)
+			# get urls from next_page_url
+			self.get_pubs_urls(next_page_url)
 
+	def get_pubs_data(self, url):
+		print(f'Crawling page: {url}')
+		html = self.get_html(url)
+
+		scraper = Scraper(html)
+		pubs_data = scraper.get_pubs_data()
 
 	def run(self):
+		# get all URLs to be scraped
+		self.get_pubs_urls(self.base_url)
+
 		""" run the crawler for each url in seed
 			Use multithreading for each GET request
 
-		"""
-		for url in self.seed:
-			tr = threading.Thread(target=self.crawl_page(url))
-			tr.start()
+		# """
 
-if __name__ == '__main__':
-	seed = [
-		# 'https://www.rottentomatoes.com/browse/in-theaters/',
-		# 'https://www.imdb.com/chart/moviemeter/?ref_=nv_mv_mpm'
-		# 'https://www.autokelly.bg/',
-		# 'https://www.imdb.com/chart/moviemeter/?ref_=nv_mv_mpm',
-		# 'https://bnr.bg/lyubopitno/list',
-		# 'https://www.jobs.bg/front_job_search.php?add_sh=1&from_hp=1&keywords%5B%5D=python',
-		# 'https://bnr.bg/lyubopitno/list',
-		'https://bnr.bg/hristobotev/radioteatre/list'
-	]
-	crawler = Crawler(seed, "../data/")
-	crawler.run()
+		print(f'Seed contains {len(self.seed)} urls')
+
+
+		for url in self.seed:
+			tr = threading.Thread(target=self.get_pubs_data(url))
+			tr.start()
