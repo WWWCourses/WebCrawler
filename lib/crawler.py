@@ -3,14 +3,19 @@ import re
 import threading
 
 from lib.scraper import Scraper
+from lib.db import DB
 
 class Crawler():
-	def __init__(self, base_url, data_path):
+	def __init__(self, base_url, data_path='./data/'):
 		self.base_url = base_url
 		self.seed = []
 		self.visited = []
 		self.data_path = data_path
-		self.current_page_number =1
+		self.current_page_number = 1
+
+		self.db = DB()
+		self.db.drop_radiotheaters_table()
+		self.db.create_radiotheaters_table()
 
 	def make_filename(self,url):
 		""" Extracts domain from a url.
@@ -44,7 +49,6 @@ class Crawler():
 			print(f'Can not write to file: {filename}: {str(e)}')
 			exit(-1)
 
-
 	def get_html(self,url):
 		# GET request without SSL verification:
 		try:
@@ -67,13 +71,9 @@ class Crawler():
 
 		return html
 
-	def get_pubs_urls(self, url):
+	def get_seed(self, url):
 		print(f'Crawling main page {self.current_page_number}: {url}')
 		html = self.get_html(url)
-
-		# filename = self.make_filename(url)
-		# self.write_to_file(filename, html)
-		# return html
 
 		scraper = Scraper(html)
 		pubs_urls = scraper.get_pubs_urls()
@@ -91,27 +91,40 @@ class Crawler():
 			next_page_url = f'{self.base_url}?page_1_1={self.current_page_number}'
 
 			# get urls from next_page_url
-			self.get_pubs_urls(next_page_url)
+			self.get_seed(next_page_url)
 
-	def get_pubs_data(self, url):
+	def get_pub_data(self, url):
 		print(f'Crawling page: {url}')
 		html = self.get_html(url)
 
 		scraper = Scraper(html)
-		pubs_data = scraper.get_pubs_data()
+		pub_data = scraper.get_pub_data()
+
+		return pub_data
+
+	def save_pub_data(self,url):
+		pub_data = self.get_pub_data(url)
+		# print(f'Save to db: ', pub_data)
+
+		db = DB()
+
+		db.insert_row(pub_data)
+		db.conn.close()
+
 
 	def run(self):
-		# get all URLs to be scraped
-		self.get_pubs_urls(self.base_url)
-
-		""" run the crawler for each url in seed
-			Use multithreading for each GET request
-
-		# """
-
+		# get all URLs to be scraped from base_url
+		self.get_seed(self.base_url)
 		print(f'Seed contains {len(self.seed)} urls')
 
+		# threads_number = len(self.seed)
 
 		for url in self.seed:
-			tr = threading.Thread(target=self.get_pubs_data(url))
+			tr = threading.Thread(target=self.save_pub_data, args=(url,))
 			tr.start()
+
+			# comment above and uncomment next to test without threading:
+			# crawler.save_pub_data(url)
+
+
+
