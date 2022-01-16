@@ -25,7 +25,7 @@ class Scraper:
 		m = date_rx.search(str(pub_date_div))
 		if m:
 			pub_date = m[1]
-			pub_date = datetime.datetime.strptime(pub_date, "%d.%m.%y")
+			pub_date = datetime.datetime.strptime(pub_date, '%d.%m.%y')
 
 		return pub_date
 

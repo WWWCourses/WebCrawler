@@ -124,7 +124,7 @@ class Crawler():
 			tr.start()
 
 			# comment above and uncomment next to test without threading:
-			# crawler.save_pub_data(url)
+			# self.save_pub_data(url)
 
 
 

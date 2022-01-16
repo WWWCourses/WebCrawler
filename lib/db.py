@@ -2,6 +2,7 @@ import mysql.connector as mc
 
 class DB():
 	def __init__(self):
+		# TODO: use config.ini and python configparser module
 		mysql_config = {
 			'host':'localhost',
 			'user':'test',
@@ -60,14 +61,25 @@ class DB():
 			cursor.execute(sql, tuple(row_data.values()))
 			self.conn.commit()
 
+	def select_all_data(self):
+		sql = "SELECT * FROM  radiotheaters"
+
+		with self.conn.cursor() as cursor:
+			cursor.execute(sql)
+			result = cursor.fetchall()
+
+		return result
+
+	def get_column_names(self):
+		sql = "SELECT * FROM  radiotheaters LIMIT 1;"
+
+		with self.conn.cursor() as cursor:
+			cursor.execute(sql)
+			result = cursor.fetchone()
+
+		return cursor.column_names
 
 if __name__ == '__main__':
 	db = DB()
-	db.create_radiotheaters_table()
 
-	data = {
-		'title':'title',
-		'pub_date_str':'2021-01-23',
-		'pub_content':'pub_content'
-	}
-	db.insert_row(data)
+	db.get_column_names()
