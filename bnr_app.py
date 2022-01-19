@@ -19,7 +19,13 @@ class TableView(qtw.QTableView):
 		self.column_names = self.db.get_column_names()
 
 		model = self.setup_model()
-		self.setModel(model)
+
+		self.filter_proxy_model = qtc.QSortFilterProxyModel()
+		self.filter_proxy_model.setSourceModel(model)
+		self.filter_proxy_model.setFilterCaseSensitivity(qtc.Qt.CaseInsensitive)
+		self.filter_proxy_model.setFilterKeyColumn(1)
+
+		self.setModel(self.filter_proxy_model)
 
 		self.setup_gui()
 
@@ -60,7 +66,7 @@ class TableView(qtw.QTableView):
 
 		# enable columns sort
 		self.setSortingEnabled(True)
-		self.sortByColumn(2,qtc.Qt.AscendingOrder)
+		self.sortByColumn(0,qtc.Qt.AscendingOrder)
 
 	def setup_model(self):
 		model = qtg.QStandardItemModel()
@@ -73,7 +79,7 @@ class TableView(qtw.QTableView):
 			for field in row:
 				item = qtg.QStandardItem()
 				if isinstance(field, datetime.date):
-					field = field.strftime('%d.%m.%y')
+					field = field.strftime('%d.%m.%Y')
 				elif isinstance(field, str) and len(field)>100:
 					# set full string with UserRole for later use:
 					item.setData(field, qtc.Qt.UserRole)
@@ -85,12 +91,16 @@ class TableView(qtw.QTableView):
 
 			model.insertRow(i, items)
 
-
 		return model
+
+	@qtc.pyqtSlot(int)
+	def set_filter_column(self,index):
+		self.filter_proxy_model.setFilterKeyColumn(index)
 
 	def get_last_updated_date(self):
 		last_updated_date=self.db.get_last_updated_date()
 		return last_updated_date.strftime('%d.%m.%y, %H:%M:%S')
+
 
 class TableViewWidget(qtw.QWidget):
 	def __init__(self, parent, *args, **kwargs):
@@ -102,14 +112,14 @@ class TableViewWidget(qtw.QWidget):
 
 	def setup_gui(self):
 		# table view:
-		tableView = TableView()
-		tableViewWidth = tableView.frameGeometry().width()
-		tableViewHeight = tableView.frameGeometry().height()
-		print(tableViewWidth, tableViewHeight)
+		self.tableView = TableView()
+		tableViewWidth = self.tableView.frameGeometry().width()
+		tableViewHeight = self.tableView.frameGeometry().height()
+		# print(tableViewWidth, tableViewHeight)
 
 		# label
 		lblTitle = qtw.QLabel()
-		label_msg = f'Radiotheaters publications as scrolled on {tableView.get_last_updated_date()}'
+		label_msg = f'Radiotheaters publications as crawlled on {self.tableView.get_last_updated_date()}'
 		lblTitle.setText(label_msg)
 		lblTitle.setStyleSheet('''
 			font-size: 30px;
@@ -119,6 +129,21 @@ class TableViewWidget(qtw.QWidget):
 		''')
 		lblTitle.setAlignment(qtc.Qt.AlignCenter)
 
+		# filter box layout:
+		filterLabel = qtw.QLabel('Filter by column: ')
+
+		filterLineEdit = qtw.QLineEdit()
+		filterLineEdit.textChanged.connect(self.tableView.filter_proxy_model.setFilterRegExp)
+
+		comboBox = qtw.QComboBox()
+		comboBox.addItems(["{0}".format(col) for col in self.tableView.column_names])
+		comboBox.setCurrentText('title')
+		comboBox.currentIndexChanged.connect(lambda idx:self.tableView.set_filter_column(idx))
+
+		filterBoxLayout = qtw.QHBoxLayout()
+		filterBoxLayout.addWidget(filterLabel)
+		filterBoxLayout.addWidget(comboBox)
+		filterBoxLayout.addWidget(filterLineEdit)
 
 		# close button
 		btnClose = qtw.QPushButton('Close')
@@ -129,7 +154,8 @@ class TableViewWidget(qtw.QWidget):
 		# main layout
 		layout = qtw.QVBoxLayout()
 		layout.addWidget(lblTitle)
-		layout.addWidget(tableView)
+		layout.addLayout(filterBoxLayout)
+		layout.addWidget(self.tableView)
 		layout.addWidget(btnClose)
 
 		self.setLayout(layout)
@@ -140,6 +166,13 @@ class TableViewWidget(qtw.QWidget):
 	def close_all(self):
 		self.parent.close()
 		self.close()
+
+	@qtc.pyqtSlot(int)
+	def on_comboBox_currentIndexChanged(self,index):
+		self.tableView.filter_proxy_model.setFilterKeyColumn(index)
+
+
+
 
 	def get_current_datetime(self):
 		return datetime.datetime.now().strftime('%d.%m.%y, %H:%M:%S')
