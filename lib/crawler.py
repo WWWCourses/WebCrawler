@@ -2,8 +2,12 @@ import requests
 import re
 import threading
 
-from lib.scraper import Scraper
-from lib.db import DB
+try:
+	from lib.scraper import Scraper
+	from lib.db import DB
+except:
+	from scraper import Scraper
+	from db import DB
 
 class Crawler():
 	def __init__(self, base_url, data_path='./data/'):
@@ -14,8 +18,8 @@ class Crawler():
 		self.current_page_number = 1
 
 		self.db = DB()
-		self.db.drop_radiotheaters_table()
-		self.db.create_radiotheaters_table()
+		# self.db.drop_radiotheaters_table()
+		# self.db.create_radiotheaters_table()
 
 	def make_filename(self,url):
 		""" Extracts domain from a url.
@@ -80,8 +84,8 @@ class Crawler():
 
 		# if pubs_urls is not empy => crawl next
 		if pubs_urls:
-			# prepend 'https://bnr.bg/' to pubs_urls:
-			pubs_urls = ['https://bnr.bg/'+url for url in pubs_urls]
+			# prepend 'https://bnr.bg' to pubs_urls:
+			pubs_urls = ['https://bnr.bg'+url for url in pubs_urls]
 
 			# concatenate pubs.urls to self.seed
 			self.seed = [*self.seed, *pubs_urls]
@@ -111,20 +115,29 @@ class Crawler():
 		db.insert_row(pub_data)
 		db.conn.close()
 
-
 	def run(self):
 		# get all URLs to be scraped from base_url
 		self.get_seed(self.base_url)
 		print(f'Seed contains {len(self.seed)} urls')
 
 		# threads_number = len(self.seed)
-
+		self.alive = True
 		for url in self.seed:
 			tr = threading.Thread(target=self.save_pub_data, args=(url,))
 			tr.start()
+			tr.join()
 
 			# comment above and uncomment next to test without threading:
 			# self.save_pub_data(url)
+		self.alive = False
+		print('Crawler finished its job!')
+
+	def is_alive(self):
+		return self.alive
 
 
 
+if __name__ == '__main__':
+	base_url = 'https://bnr.bg/hristobotev/radioteatre/list'
+	crawler = Crawler(base_url)
+	crawler.run()

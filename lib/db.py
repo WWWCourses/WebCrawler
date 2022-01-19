@@ -23,8 +23,12 @@ class DB():
 			CREATE TABLE IF NOT EXISTS radiotheaters(
 				id INT AUTO_INCREMENT PRIMARY KEY,
 				title VARCHAR(100) NOT NULL,
-				date DATE NOT NULL,
-				content TEXT
+				pub_date DATE NOT NULL,
+				content TEXT,
+				created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+				updated_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+				CONSTRAINT title_date UNIQUE (title, pub_date)
 			);
 		"""
 
@@ -41,8 +45,8 @@ class DB():
 
 	def insert_rows(self, rows_data):
 		sql = """
-			INSERT INTO radiotheaters
-			(title, date, content)
+			INSERT IGNORE INTO radiotheaters
+			(title, pub_date, content)
 			VALUES ( %s, %s, %s)
 		"""
 
@@ -52,8 +56,8 @@ class DB():
 
 	def insert_row(self, row_data):
 		sql = """
-			INSERT INTO radiotheaters
-				(title, date, content)
+			INSERT IGNORE INTO radiotheaters
+				(title, pub_date, content)
 				VALUES ( %s, %s, %s)
 		"""
 
@@ -62,7 +66,7 @@ class DB():
 			self.conn.commit()
 
 	def select_all_data(self):
-		sql = "SELECT * FROM  radiotheaters"
+		sql = "SELECT id, title, pub_date, content FROM  radiotheaters"
 
 		with self.conn.cursor() as cursor:
 			cursor.execute(sql)
@@ -70,8 +74,17 @@ class DB():
 
 		return result
 
+	def get_last_updated_date(self):
+		sql = 'SELECT MAX(updated_at) AS "Max Date" FROM radiotheaters;'
+		with self.conn.cursor() as cursor:
+			cursor.execute(sql)
+			result = cursor.fetchone()
+
+		return result[0]
+
+
 	def get_column_names(self):
-		sql = "SELECT * FROM  radiotheaters LIMIT 1;"
+		sql = "SELECT id, title, pub_date, content FROM  radiotheaters LIMIT 1;"
 
 		with self.conn.cursor() as cursor:
 			cursor.execute(sql)
@@ -82,4 +95,6 @@ class DB():
 if __name__ == '__main__':
 	db = DB()
 
-	db.get_column_names()
+	# db.get_column_names()
+	res = db.get_last_updated_date()
+	print(res)
