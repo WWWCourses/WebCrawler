@@ -1,19 +1,12 @@
 import mysql.connector as mc
+from bnr.read_config import read_db_config
 
 class DB():
 	def __init__(self):
-		# TODO: use config.ini and python configparser module
-		mysql_config = {
-			'host':'localhost',
-			'user':'test',
-			'password':'qazwsxedc',
-			'database':'bnrdb'
-		}
-		self.connect(mysql_config)
-
-	def connect(self, config):
+		mysql_config = read_db_config('config.ini', 'mysql')
+		print(mysql_config)
 		try:
-			self.conn = mc.connect(**config)
+			self.conn = mc.connect(**mysql_config)
 		except mc.Error as e:
 			print(e)
 
@@ -80,8 +73,10 @@ class DB():
 			cursor.execute(sql)
 			result = cursor.fetchone()
 
-		return result[0]
-
+		if result:
+			return result[0]
+		else:
+			raise ValueError('No data in table')
 
 	def get_column_names(self):
 		sql = "SELECT id, title, pub_date, content FROM  radiotheaters LIMIT 1;"

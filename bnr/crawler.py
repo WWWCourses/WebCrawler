@@ -1,10 +1,11 @@
 import requests
 import re
 import threading
+import time
 
 try:
-	from lib.scraper import Scraper
-	from lib.db import DB
+	from bnr.scraper import Scraper
+	from bnr.db import DB
 except:
 	from scraper import Scraper
 	from db import DB
@@ -110,10 +111,8 @@ class Crawler():
 		pub_data = self.get_pub_data(url)
 		# print(f'Save to db: ', pub_data)
 
-		db = DB()
-
-		db.insert_row(pub_data)
-		db.conn.close()
+		self.db.insert_row(pub_data)
+		# self.db.conn.close()
 
 	def run(self):
 		# get all URLs to be scraped from base_url
@@ -122,19 +121,24 @@ class Crawler():
 
 		# threads_number = len(self.seed)
 		self.alive = True
+
+		start = time.time()
 		for url in self.seed:
-			tr = threading.Thread(target=self.save_pub_data, args=(url,))
-			tr.start()
-			tr.join()
+			# tr = threading.Thread(target=self.save_pub_data, args=(url,))
+			# tr.start()
+			# tr.join()
 
 			# comment above and uncomment next to test without threading:
-			# self.save_pub_data(url)
+			self.save_pub_data(url)
+
+		end = time.time()
+		print(f'Time elapsed: {end-start}')
+
 		self.alive = False
 		print('Crawler finished its job!')
 
 	def is_alive(self):
 		return self.alive
-
 
 
 if __name__ == '__main__':

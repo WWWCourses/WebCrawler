@@ -4,11 +4,12 @@ from PyQt5 import QtWidgets as qtw
 from PyQt5 import QtCore as qtc
 from PyQt5 import QtGui as qtg
 
-from lib.crawler import Crawler
-from lib.db import DB
+from bnr.crawler import Crawler
+from bnr.db import DB
 
 import datetime
-import threading
+
+BASE_URL = 'https://bnr.bg/hristobotev/radioteatre/list'
 
 class TableView(qtw.QTableView):
 	def __init__(self, *args, **kwargs):
@@ -172,14 +173,14 @@ class TableViewWidget(qtw.QWidget):
 		self.tableView.filter_proxy_model.setFilterKeyColumn(index)
 
 
-
-
 	def get_current_datetime(self):
 		return datetime.datetime.now().strftime('%d.%m.%y, %H:%M:%S')
 
 class MainWindow(qtw.QMainWindow):
 	def __init__(self , *args, **kwargs):
 		super().__init__(*args, **kwargs)
+
+		self.crawler = Crawler(BASE_URL)
 
 		self.setWindowTitle('BNR Crawler')
 
@@ -217,10 +218,8 @@ class MainWindow(qtw.QMainWindow):
 
 	def run_crawler(self):
 		self.setCursor(qtc.Qt.WaitCursor)
-		base_url = 'https://bnr.bg/hristobotev/radioteatre/list'
-		crawler = Crawler(base_url)
 
-		crawler.run()
+		self.crawler.run()
 
 		self.setCursor(qtc.Qt.ArrowCursor)
 
