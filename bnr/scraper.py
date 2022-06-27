@@ -44,7 +44,7 @@ class Scraper:
 				pubs_urls.append(a['href'])
 
 			# print(pub_data['date'])
-
+		print(f'pubs_urls: {pubs_urls}')
 		return pubs_urls
 
 	def get_pub_data(self):

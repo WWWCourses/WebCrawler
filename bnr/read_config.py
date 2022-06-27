@@ -1,6 +1,7 @@
 from configparser import ConfigParser
 import os
 
+
 package_directory = os.path.dirname(os.path.abspath(__file__))
 
 def read_db_config(filename='config.ini', section='mysql'):

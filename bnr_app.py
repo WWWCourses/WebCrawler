@@ -3,6 +3,7 @@ from time import strftime
 from PyQt5 import QtWidgets as qtw
 from PyQt5 import QtCore as qtc
 from PyQt5 import QtGui as qtg
+from PyQt5.QtSql import QSqlDatabase, QSqlTableModel
 
 from bnr.crawler import Crawler
 from bnr.db import DB
@@ -16,6 +17,16 @@ class TableView(qtw.QTableView):
 		super().__init__()
 
 		self.db = DB()
+
+		if not self.db.conn:
+			qtw.QMessageBox.critical(
+							None,
+							"Database Error!",
+							"Database Error: %s" % con.lastError().databaseText(),
+			)
+			return False
+
+
 		self.data = self.db.select_all_data()
 		self.column_names = self.db.get_column_names()
 
@@ -39,7 +50,7 @@ class TableView(qtw.QTableView):
 		cols_count = self.model().columnCount()
 
 		self.setMinimumWidth(cols_count*230);
-		self.setMinimumHeight(rows_count*40);
+		# self.setMinimumHeight(rows_count*40);
 
 		### resize cells to fit the content:
 		# self.resizeRowsToContents()
@@ -54,7 +65,7 @@ class TableView(qtw.QTableView):
 		# self.horizontalHeader().setSectionResizeMode(qtw.QHeaderView.Stretch)
 		# self.horizontalHeader().setStretchLastSection(True)
 		# self.verticalHeader().setSectionResizeMode(qtw.QHeaderView.Stretch)
-		# self.verticalHeader().setSectionResizeMode(qtw.QHeaderView.ResizeToContents);
+		self.verticalHeader().setSectionResizeMode(qtw.QHeaderView.ResizeToContents);
 
 
 		# set all cells hight
@@ -69,6 +80,13 @@ class TableView(qtw.QTableView):
 		self.setSortingEnabled(True)
 		self.sortByColumn(0,qtc.Qt.AscendingOrder)
 
+	def ___setup_model_SQL_table_model(self):
+		model = QSqlTableModel(self)
+		model.setTable("radiotheaters")
+		model.setEditStrategy(QSqlTableModel.OnFieldChange)
+		model.setHorizontalHeaderLabels(self.column_names)
+		model.select()
+
 	def setup_model(self):
 		model = qtg.QStandardItemModel()
 		model.setHorizontalHeaderLabels(self.column_names)
@@ -81,6 +99,7 @@ class TableView(qtw.QTableView):
 				item = qtg.QStandardItem()
 				if isinstance(field, datetime.date):
 					field = field.strftime('%d.%m.%Y')
+					pass
 				elif isinstance(field, str) and len(field)>100:
 					# set full string with UserRole for later use:
 					item.setData(field, qtc.Qt.UserRole)
@@ -101,7 +120,6 @@ class TableView(qtw.QTableView):
 	def get_last_updated_date(self):
 		last_updated_date=self.db.get_last_updated_date()
 		return last_updated_date.strftime('%d.%m.%y, %H:%M:%S')
-
 
 class TableViewWidget(qtw.QWidget):
 	def __init__(self, parent, *args, **kwargs):
@@ -162,7 +180,7 @@ class TableViewWidget(qtw.QWidget):
 		self.setLayout(layout)
 
 		self.setFixedWidth(tableViewWidth)
-		self.setFixedHeight(tableViewHeight)
+		# self.setFixedHeight(tableViewHeight)
 
 	def close_all(self):
 		self.parent.close()
@@ -199,7 +217,8 @@ class MainWindow(qtw.QMainWindow):
 
 		# actions on buttons click:
 		btnShowData.clicked.connect(self.show_data)
-		btnCrawlerRun.clicked.connect(self.run_crawler)
+		# btnCrawlerRun.clicked.connect(self.run_crawler)
+		btnCrawlerRun.clicked.connect( self.crawler.run )
 
 		# add spacer or just fixed spacing
 		layout.addSpacing(10)
