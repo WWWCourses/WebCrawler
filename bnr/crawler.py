@@ -64,17 +64,18 @@ class Crawler():
 			# check https://levelup.gitconnected.com/solve-the-dreadful-certificate-issues-in-python-requests-module-2020d922c72f
 			r = requests.get(url,verify=False)
 		except Exception as e:
-			print('Ca not get url: {url}: {str(e)}!')
+			print(f'Can not get url: {url}: {str(e)}!')
 			exit(-1)
 
 		# set content encoding explicitely
 		r.encoding="utf-8"
 
-		# if we have the html => save it into file
 		if r.ok:
-			html = r.text
+			return r.text
+		else:
+			print('The server did not return success response. Bye...')
+			exit
 
-		return html
 
 	def get_seed(self, url):
 		print(f'Crawling main page {self.current_page_number}: {url}')
@@ -119,26 +120,10 @@ class Crawler():
 		self.get_seed(self.base_url)
 		print(f'Seed contains {len(self.seed)} urls')
 
-		# threads_number = len(self.seed)
-		self.alive = True
-
-		start = time.time()
 		for url in self.seed:
-			# tr = threading.Thread(target=self.save_pub_data, args=(url,))
-			# tr.start()
-			# tr.join()
-
-			# comment above and uncomment next to test without threading:
 			self.save_pub_data(url)
 
-		end = time.time()
-		print(f'Time elapsed: {end-start}')
-
-		self.alive = False
 		print('Crawler finished its job!')
-
-	def is_alive(self):
-		return self.alive
 
 
 if __name__ == '__main__':

@@ -50,7 +50,7 @@ class TableView(qtw.QTableView):
 		cols_count = self.model().columnCount()
 
 		self.setMinimumWidth(cols_count*230);
-		# self.setMinimumHeight(rows_count*40);
+		self.setMinimumHeight(rows_count*40);
 
 		### resize cells to fit the content:
 		# self.resizeRowsToContents()
@@ -210,13 +210,15 @@ class MainWindow(qtw.QMainWindow):
 
 		btnsLayout = qtw.QHBoxLayout()
 		btnCrawlerRun = qtw.QPushButton('Run Crawler')
-		btnShowData = qtw.QPushButton('Show Data')
+		self.btnShowData = qtw.QPushButton('Show Data')
+		# self.btnShowData.setEnabled(False)
+
 		btnsLayout.addWidget(btnCrawlerRun)
-		btnsLayout.addWidget(btnShowData)
+		btnsLayout.addWidget(self.btnShowData)
 		layout.addLayout(btnsLayout)
 
 		# actions on buttons click:
-		btnShowData.clicked.connect(self.show_data)
+		self.btnShowData.clicked.connect(self.show_data)
 		# btnCrawlerRun.clicked.connect(self.run_crawler)
 		btnCrawlerRun.clicked.connect( self.crawler.run )
 
@@ -233,6 +235,7 @@ class MainWindow(qtw.QMainWindow):
 
 	def show_data(self):
 		self.tableViewWidget = TableViewWidget(parent=self)
+
 		self.tableViewWidget.show()
 
 	def run_crawler(self):
