@@ -94,7 +94,7 @@ class Crawler():
 
 			# make next page url
 			self.current_page_number+=1
-			next_page_url = f'{self.base_url}?page_1_1={self.current_page_number}'
+			next_page_url = f'{self.base_url}?page_1_2={self.current_page_number}'
 
 			# get urls from next_page_url
 			self.get_seed(next_page_url)

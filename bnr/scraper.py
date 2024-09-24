@@ -31,7 +31,7 @@ class Scraper:
 
 
 	def get_pubs_urls(self):
-		pubs_html = self.soup.select('#module_1_1 .row-fluid > .span8')
+		pubs_html = self.soup.select('#module_1_2 .row-fluid > .span8')
 
 		pubs_urls = []
 
