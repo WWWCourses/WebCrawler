@@ -1,9 +1,10 @@
+# bnr_app.py
 import sys
 from time import strftime
-from PyQt5 import QtWidgets as qtw
-from PyQt5 import QtCore as qtc
-from PyQt5 import QtGui as qtg
-from PyQt5.QtSql import QSqlDatabase, QSqlTableModel
+from PyQt6 import QtWidgets as qtw
+from PyQt6 import QtCore as qtc
+from PyQt6 import QtGui as qtg
+from PyQt6.QtSql import QSqlDatabase, QSqlTableModel
 
 from bnr.crawler import Crawler
 from bnr.db import DB
@@ -20,12 +21,11 @@ class TableView(qtw.QTableView):
 
 		if not self.db.conn:
 			qtw.QMessageBox.critical(
-							None,
-							"Database Error!",
-							"Database Error: %s" % con.lastError().databaseText(),
+				None,
+				"Database Error!",
+				"Database Error: %s" % con.lastError().databaseText(),
 			)
 			return False
-
 
 		self.data = self.db.select_all_data()
 		self.column_names = self.db.get_column_names()
@@ -34,79 +34,44 @@ class TableView(qtw.QTableView):
 
 		self.filter_proxy_model = qtc.QSortFilterProxyModel()
 		self.filter_proxy_model.setSourceModel(model)
-		self.filter_proxy_model.setFilterCaseSensitivity(qtc.Qt.CaseInsensitive)
+		self.filter_proxy_model.setFilterCaseSensitivity(qtc.Qt.CaseSensitivity.CaseInsensitive)
 		self.filter_proxy_model.setFilterKeyColumn(1)
 
 		self.setModel(self.filter_proxy_model)
 
 		self.setup_gui()
 
-		# self.showColumn(2)
-
 	def setup_gui(self):
-		### set table dimensions:
-		# get rows and columns count from model:
 		rows_count = self.model().rowCount()
 		cols_count = self.model().columnCount()
 
-		self.setMinimumWidth(cols_count*230);
-		self.setMinimumHeight(rows_count*40);
+		self.setMinimumWidth(cols_count * 230)
+		self.setMinimumHeight(rows_count * 40)
 
-		### resize cells to fit the content:
-		# self.resizeRowsToContents()
-		# self.resizeColumnsToContents()
-		# set width of separate columns:
 		self.resizeColumnToContents(0)
 		self.resizeColumnToContents(1)
 		self.setColumnWidth(3, 300)
 
+		self.verticalHeader().setSectionResizeMode(qtw.QHeaderView.ResizeMode.ResizeToContents)
 
-		# streach table:
-		# self.horizontalHeader().setSectionResizeMode(qtw.QHeaderView.Stretch)
-		# self.horizontalHeader().setStretchLastSection(True)
-		# self.verticalHeader().setSectionResizeMode(qtw.QHeaderView.Stretch)
-		self.verticalHeader().setSectionResizeMode(qtw.QHeaderView.ResizeToContents);
-
-
-		# set all cells hight
-		# header = self.verticalHeader()
-		# header.setDefaultSectionSize(50)
-		# header.setSectionResizeMode(qtw.QHeaderView.Fixed)
-
-		# enable columns move
-		# self.horizontalHeader().setSectionsMovable(True)
-
-		# enable columns sort
 		self.setSortingEnabled(True)
-		self.sortByColumn(0,qtc.Qt.AscendingOrder)
-
-	def ___setup_model_SQL_table_model(self):
-		model = QSqlTableModel(self)
-		model.setTable("radiotheaters")
-		model.setEditStrategy(QSqlTableModel.OnFieldChange)
-		model.setHorizontalHeaderLabels(self.column_names)
-		model.select()
+		self.sortByColumn(0, qtc.Qt.SortOrder.AscendingOrder)
 
 	def setup_model(self):
 		model = qtg.QStandardItemModel()
 		model.setHorizontalHeaderLabels(self.column_names)
 
 		for i, row in enumerate(self.data):
-			# items = [qtg.QStandardItem(str(item)) for item in row]
-
 			items = []
 			for field in row:
 				item = qtg.QStandardItem()
 				if isinstance(field, datetime.date):
 					field = field.strftime('%d.%m.%Y')
-					pass
-				elif isinstance(field, str) and len(field)>100:
-					# set full string with UserRole for later use:
-					item.setData(field, qtc.Qt.UserRole)
-					# trim string for display
-					field = field[0:50]+'...'
+				elif isinstance(field, str) and len(field) > 100:
+					item.setData(field, qtc.Qt.ItemDataRole.UserRole)
+					field = field[0:50] + '...'
 
-				item.setData(field, qtc.Qt.DisplayRole)
+				item.setData(field, qtc.Qt.ItemDataRole.DisplayRole)
 				items.append(item)
 
 			model.insertRow(i, items)
@@ -114,12 +79,14 @@ class TableView(qtw.QTableView):
 		return model
 
 	@qtc.pyqtSlot(int)
-	def set_filter_column(self,index):
+	def set_filter_column(self, index):
 		self.filter_proxy_model.setFilterKeyColumn(index)
 
 	def get_last_updated_date(self):
-		last_updated_date=self.db.get_last_updated_date()
-		return last_updated_date.strftime('%d.%m.%y, %H:%M:%S')
+		last_updated_date = self.db.get_last_updated_date()
+		if last_updated_date:
+			return last_updated_date.strftime('%d.%m.%y, %H:%M:%S')
+
 
 class TableViewWidget(qtw.QWidget):
 	def __init__(self, parent, *args, **kwargs):
@@ -130,47 +97,33 @@ class TableViewWidget(qtw.QWidget):
 		self.setup_gui()
 
 	def setup_gui(self):
-		# table view:
 		self.tableView = TableView()
 		tableViewWidth = self.tableView.frameGeometry().width()
-		tableViewHeight = self.tableView.frameGeometry().height()
-		# print(tableViewWidth, tableViewHeight)
 
-		# label
 		lblTitle = qtw.QLabel()
 		label_msg = f'Radiotheaters publications as crawlled on {self.tableView.get_last_updated_date()}'
 		lblTitle.setText(label_msg)
-		lblTitle.setStyleSheet('''
-			font-size: 30px;
-			margin:20px auto;
-			color: purple;
+		lblTitle.setStyleSheet('font-size: 30px; margin:20px auto; color: purple;')
+		lblTitle.setAlignment(qtc.Qt.AlignmentFlag.AlignCenter)
 
-		''')
-		lblTitle.setAlignment(qtc.Qt.AlignCenter)
-
-		# filter box layout:
 		filterLabel = qtw.QLabel('Filter by column: ')
 
 		filterLineEdit = qtw.QLineEdit()
-		filterLineEdit.textChanged.connect(self.tableView.filter_proxy_model.setFilterRegExp)
+		filterLineEdit.textChanged.connect(self.tableView.filter_proxy_model.setFilterRegularExpression)
 
 		comboBox = qtw.QComboBox()
 		comboBox.addItems(["{0}".format(col) for col in self.tableView.column_names])
 		comboBox.setCurrentText('title')
-		comboBox.currentIndexChanged.connect(lambda idx:self.tableView.set_filter_column(idx))
+		comboBox.currentIndexChanged.connect(lambda idx: self.tableView.set_filter_column(idx))
 
 		filterBoxLayout = qtw.QHBoxLayout()
 		filterBoxLayout.addWidget(filterLabel)
 		filterBoxLayout.addWidget(comboBox)
 		filterBoxLayout.addWidget(filterLineEdit)
 
-		# close button
 		btnClose = qtw.QPushButton('Close')
-		# btnClose.clicked.connect(self.close_all)
-		# or with lambda syntax
-		btnClose.clicked.connect( lambda _:self.close() and self.parent.close() )
+		btnClose.clicked.connect(lambda _: self.close() and self.parent.close())
 
-		# main layout
 		layout = qtw.QVBoxLayout()
 		layout.addWidget(lblTitle)
 		layout.addLayout(filterBoxLayout)
@@ -178,24 +131,19 @@ class TableViewWidget(qtw.QWidget):
 		layout.addWidget(btnClose)
 
 		self.setLayout(layout)
-
 		self.setFixedWidth(tableViewWidth)
-		# self.setFixedHeight(tableViewHeight)
 
 	def close_all(self):
 		self.parent.close()
 		self.close()
 
 	@qtc.pyqtSlot(int)
-	def on_comboBox_currentIndexChanged(self,index):
+	def on_comboBox_currentIndexChanged(self, index):
 		self.tableView.filter_proxy_model.setFilterKeyColumn(index)
 
 
-	def get_current_datetime(self):
-		return datetime.datetime.now().strftime('%d.%m.%y, %H:%M:%S')
-
 class MainWindow(qtw.QMainWindow):
-	def __init__(self , *args, **kwargs):
+	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 
 		self.crawler = Crawler(BASE_URL)
@@ -205,50 +153,37 @@ class MainWindow(qtw.QMainWindow):
 		layout = qtw.QVBoxLayout()
 		lblTableCaption = qtw.QLabel('Radiotheaters Data')
 		lblTableCaption.setObjectName('lblTableCaption')
-		lblTableCaption.setAlignment(qtc.Qt.AlignCenter)
+		lblTableCaption.setAlignment(qtc.Qt.AlignmentFlag.AlignCenter)
 		layout.addWidget(lblTableCaption)
 
 		btnsLayout = qtw.QHBoxLayout()
 		btnCrawlerRun = qtw.QPushButton('Run Crawler')
 		self.btnShowData = qtw.QPushButton('Show Data')
-		# self.btnShowData.setEnabled(False)
 
 		btnsLayout.addWidget(btnCrawlerRun)
 		btnsLayout.addWidget(self.btnShowData)
 		layout.addLayout(btnsLayout)
 
-		# actions on buttons click:
 		self.btnShowData.clicked.connect(self.show_data)
-		# btnCrawlerRun.clicked.connect(self.run_crawler)
-		btnCrawlerRun.clicked.connect( self.crawler.run )
+		btnCrawlerRun.clicked.connect(self.crawler.run)
 
-		# add spacer or just fixed spacing
 		layout.addSpacing(10)
-		# layout.addSpacerItem(qtw.QSpacerItem(0, 0, qtw.QSizePolicy.Expanding, qtw.QSizePolicy.Expanding))
 
 		mainWidget = qtw.QWidget()
 		mainWidget.setLayout(layout)
 
 		self.setCentralWidget(mainWidget)
 
-		self.show();
+		self.show()
 
 	def show_data(self):
 		self.tableViewWidget = TableViewWidget(parent=self)
-
 		self.tableViewWidget.show()
-
-	def run_crawler(self):
-		self.setCursor(qtc.Qt.WaitCursor)
-
-		self.crawler.run()
-
-		self.setCursor(qtc.Qt.ArrowCursor)
 
 
 if __name__ == '__main__':
-	app = qtw.QApplication(sys.argv);
+	app = qtw.QApplication(sys.argv)
 
 	window = MainWindow()
 
-	sys.exit(app.exec_())
+	sys.exit(app.exec())

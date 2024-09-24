@@ -19,8 +19,8 @@ class Crawler():
 		self.current_page_number = 1
 
 		self.db = DB()
-		# self.db.drop_radiotheaters_table()
-		# self.db.create_radiotheaters_table()
+		self.db.drop_radiotheaters_table()
+		self.db.create_radiotheaters_table()
 
 	def make_filename(self,url):
 		""" Extracts domain from a url.
