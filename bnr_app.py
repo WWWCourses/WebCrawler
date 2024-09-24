@@ -104,7 +104,7 @@ class TableViewWidget(qtw.QWidget):
         lblTitle = qtw.QLabel()
         label_msg = f'Radiotheaters publications as crawlled on {self.tableView.get_last_updated_date()}'
         lblTitle.setText(label_msg)
-        lblTitle.setStyleSheet('font-size: 30px; margin:20px auto; color: purple;')
+        lblTitle.setStyleSheet('font-size: 30px; margin:20px auto; color: orange;')
         lblTitle.setAlignment(qtc.Qt.AlignmentFlag.AlignCenter)
 
         filterLabel = qtw.QLabel('Filter by column: ')
