@@ -5,6 +5,7 @@ from PyQt6 import QtWidgets as qtw
 from PyQt6 import QtCore as qtc
 from PyQt6 import QtGui as qtg
 from PyQt6.QtSql import QSqlDatabase, QSqlTableModel
+from PyQt6.QtGui import QPixmap
 
 from bnr.crawler import Crawler
 from bnr.db import DB
@@ -141,8 +142,6 @@ class TableViewWidget(qtw.QWidget):
     def on_comboBox_currentIndexChanged(self, index):
         self.tableView.filter_proxy_model.setFilterKeyColumn(index)
 
-
-from PyQt6.QtGui import QPixmap
 
 class MainWindow(qtw.QMainWindow):
     def __init__(self, *args, **kwargs):
