@@ -31,14 +31,14 @@ class Scraper:
 
 
 	def get_pubs_urls(self):
-		pubs_html = self.soup.select('#module_1_1 .row-fluid > .span8')
+		pubs_html = self.soup.select('#module_1_2 .row-fluid > .span8')
 
 		pubs_urls = []
 
 		for pub_div in pubs_html:
 			pub_date = self.get_pub_date(pub_div)
 
-			# get publication details only if date is past year ago
+			# Retrieve publication details only for entries from the past year
 			if self.is_past_year_ago(pub_date):
 				a = pub_div.find('a')
 				pubs_urls.append(a['href'])
