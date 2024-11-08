@@ -16,7 +16,7 @@
 	python -m venv .venv
 
 	# activate virtual env !!! (for Windows, CMD:)
-	.\.venv\Scripts\activate
+	.\.venv\Scripts\activate.bat
 
 	# and then install requirements:
 	pip install -r requirements.txt
