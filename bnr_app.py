@@ -109,17 +109,18 @@ class TableViewWidget(qtw.QWidget):
 
         filterLabel = qtw.QLabel('Filter by column: ')
 
+        filterComboBox = qtw.QComboBox()
+        filterComboBox.addItems([f"{col}" for col in self.tableView.column_names])
+        filterComboBox.setCurrentText('title')
+        filterComboBox.currentIndexChanged.connect(lambda idx: self.tableView.set_filter_column(idx))
+
         filterLineEdit = qtw.QLineEdit()
         filterLineEdit.textChanged.connect(self.tableView.filter_proxy_model.setFilterRegularExpression)
 
-        comboBox = qtw.QComboBox()
-        comboBox.addItems(["{0}".format(col) for col in self.tableView.column_names])
-        comboBox.setCurrentText('title')
-        comboBox.currentIndexChanged.connect(lambda idx: self.tableView.set_filter_column(idx))
 
         filterBoxLayout = qtw.QHBoxLayout()
         filterBoxLayout.addWidget(filterLabel)
-        filterBoxLayout.addWidget(comboBox)
+        filterBoxLayout.addWidget(filterComboBox)
         filterBoxLayout.addWidget(filterLineEdit)
 
         btnClose = qtw.QPushButton('Close')
@@ -139,7 +140,7 @@ class TableViewWidget(qtw.QWidget):
         self.close()
 
     @qtc.pyqtSlot(int)
-    def on_comboBox_currentIndexChanged(self, index):
+    def on_filterComboBox_currentIndexChanged(self, index):
         self.tableView.filter_proxy_model.setFilterKeyColumn(index)
 
 
